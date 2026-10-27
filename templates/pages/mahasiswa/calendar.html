@@ -1,0 +1,58 @@
+{% extends "base.html" %}{% block title %}Kalender Akademik{% endblock %}{%
+block content %}
+<div class="page-heading">
+    <div>
+        <span class="eyebrow">AGENDA AKADEMIK</span>
+        <h1>Kalender akademik</h1>
+        <p>Jadwal ujian dan deadline tugas yang relevan untuk program studimu.</p>
+    </div>
+</div>
+<section class="panel">
+    <div class="panel-heading">
+        <div>
+            <h2>Jadwal ujian</h2>
+            <p>Jadwal dibuat oleh dosen dan difilter berdasarkan prodi.</p>
+        </div>
+    </div>
+    {% for e in exams %}
+        <div class="event-row">
+            <div class="event-date">
+                <b>{{ e.exam_date[-2:] }}</b><small>{{ e.exam_date[5:7] }}/{{ e.exam_date[:4] }}</small>
+            </div>
+            <div class="event-info">
+                <b>{{ e.title }}</b><small>{{ e.course }} · {{ e.prodi }}</small><small>{{ e.location or 'Lokasi belum ditentukan' }}{% if e.notes %} · {{
+                    e.notes }}{% endif %}</small>
+                    </div>
+                    <span class="pill pill-purple">Ujian</span>
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <div>▦</div>
+                        <b>Belum ada jadwal ujian</b>
+                        <p>Jadwal ujian dari dosen akan ditampilkan di sini.</p>
+                    </div>
+                {% endfor %}
+            </section>
+            <section class="panel">
+                <div class="panel-heading">
+                    <div>
+                        <h2>Deadline tugas mendatang</h2>
+                        <p>Jangan sampai ada tugas yang terlewat.</p>
+                    </div>
+                </div>
+                {% for t in tasks if t.display_status!='Selesai' %}
+                    <div class="event-row">
+                        <div class="event-date event-task">
+                            <b>{{ t.deadline[-2:] }}</b><small>{{ t.deadline[5:7] }}/{{ t.deadline[:4] }}</small>
+                        </div>
+                        <div class="event-info">
+                            <b>{{ t.title }}</b><small>{{ t.course }}</small>
+                        </div>
+                        <span class="pill {% if t.days_left<0 %}pill-red{% elif t.days_left<=3 %}pill-yellow{% else %}pill-blue{% endif %}">{% if t.days_left<0 %}Terlambat{% elif t.days_left==0 %}Hari ini{% else
+                        %}{{ t.days_left }} hari lagi{% endif %}</span>
+                </div>
+            {% else %}
+                <p class="muted">Tidak ada deadline tugas yang aktif.</p>
+            {% endfor %}
+        </section>
+    {% endblock %}

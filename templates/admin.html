@@ -1,0 +1,363 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard | EduTask{% endblock %}
+
+{% block content %}
+
+<div class="admin-page">
+
+    <!-- PAGE HEADER -->
+    <header class="admin-header">
+        <div class="admin-header-content">
+            <div class="admin-eyebrow">
+                <span class="admin-eyebrow-dot"></span>
+                ADMINISTRATION CENTER
+            </div>
+
+            <h1>Dashboard Admin</h1>
+
+            <p>
+                Pantau pengguna, aktivitas akademik, dan pengelolaan
+                EduTask Smart Deadline Reminder dalam satu tempat.
+            </p>
+        </div>
+
+        <div class="admin-header-icon" aria-hidden="true">
+            <span>EDU</span>
+            <span class="admin-header-icon-symbol">✦</span>
+        </div>
+    </header>
+
+    <!-- STATISTICS -->
+    <section class="admin-stats-grid" aria-label="Statistik aplikasi">
+
+        <article class="admin-stat-card">
+            <div class="admin-stat-top">
+                <div class="admin-stat-icon admin-icon-blue">♧</div>
+                <span class="admin-stat-label">PENGGUNA</span>
+            </div>
+
+            <p class="admin-stat-title">Total Mahasiswa</p>
+            <div class="admin-stat-value">{{ students|length }}</div>
+            <p class="admin-stat-caption">
+                Mahasiswa terdaftar
+            </p>
+        </article>
+
+        <article class="admin-stat-card">
+            <div class="admin-stat-top">
+                <div class="admin-stat-icon admin-icon-purple">♙</div>
+                <span class="admin-stat-label">PENGAJAR</span>
+            </div>
+
+            <p class="admin-stat-title">Total Dosen</p>
+            <div class="admin-stat-value">{{ lecturers|length }}</div>
+            <p class="admin-stat-caption">
+                Dosen terdaftar
+            </p>
+        </article>
+
+        <article class="admin-stat-card">
+            <div class="admin-stat-top">
+                <div class="admin-stat-icon admin-icon-orange">▤</div>
+                <span class="admin-stat-label">AKADEMIK</span>
+            </div>
+
+            <p class="admin-stat-title">Total Tugas</p>
+            <div class="admin-stat-value">{{ tasks|length }}</div>
+            <p class="admin-stat-caption">
+                Tugas yang dibuat
+            </p>
+        </article>
+
+        <article class="admin-stat-card">
+            <div class="admin-stat-top">
+                <div class="admin-stat-icon admin-icon-green">◷</div>
+                <span class="admin-stat-label">AKTIVITAS</span>
+            </div>
+
+            <p class="admin-stat-title">Log Aktivitas</p>
+            <div class="admin-stat-value">{{ logs|length }}</div>
+            <p class="admin-stat-caption">
+                Catatan aktivitas terbaru
+            </p>
+        </article>
+
+    </section>
+
+    <!-- STUDENTS -->
+    <section class="admin-panel">
+        <div class="admin-panel-header">
+            <div class="admin-panel-heading">
+                <div class="admin-panel-symbol admin-icon-blue">♧</div>
+                <div>
+                    <h2>Mahasiswa Terdaftar</h2>
+                    <p>Informasi mahasiswa yang telah membuat akun.</p>
+                </div>
+            </div>
+
+            <span class="admin-count">
+                {{ students|length }} mahasiswa
+            </span>
+        </div>
+
+        <div class="admin-table-wrap">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>MAHASISWA</th>
+                        <th>NIM</th>
+                        <th>PROGRAM STUDI</th>
+                        <th>PEMBAYARAN</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for s in students %}
+                    <tr>
+                        <td>
+                            <div class="admin-person">
+                                <div class="admin-avatar admin-avatar-blue">
+                                    {{ (s.name or 'M')[0]|upper }}
+                                </div>
+                                <span class="admin-person-name">
+                                    {{ s.name }}
+                                </span>
+                            </div>
+                        </td>
+
+                        <td>
+                            <span class="admin-mono">{{ s.nim }}</span>
+                        </td>
+
+                        <td>
+                            <span class="admin-prodi">{{ s.prodi }}</span>
+                        </td>
+
+                        <td>
+                            {% set payment = (s.payment_status or '')|lower %}
+                            {% if payment in ['paid', 'lunas', 'success', 'completed'] %}
+                                <span class="admin-badge admin-badge-success">
+                                    <span class="admin-badge-dot"></span>
+                                    Lunas
+                                </span>
+                            {% elif payment in ['pending', 'menunggu', 'unpaid', 'belum bayar'] %}
+                                <span class="admin-badge admin-badge-warning">
+                                    <span class="admin-badge-dot"></span>
+                                    Menunggu
+                                </span>
+                            {% else %}
+                                <span class="admin-badge admin-badge-neutral">
+                                    {{ s.payment_status or 'Belum diketahui' }}
+                                </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4">
+                            <div class="admin-empty">
+                                <span class="admin-empty-icon">♧</span>
+                                <strong>Belum ada mahasiswa</strong>
+                                <p>Data mahasiswa akan tampil setelah akun terdaftar.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="admin-panel-footer">
+            Menampilkan data mahasiswa yang tersedia di sistem.
+        </div>
+    </section>
+
+    <!-- LECTURERS -->
+    <section class="admin-panel">
+        <div class="admin-panel-header">
+            <div class="admin-panel-heading">
+                <div class="admin-panel-symbol admin-icon-purple">♙</div>
+                <div>
+                    <h2>Dosen Terdaftar</h2>
+                    <p>Daftar pengajar yang menggunakan EduTask.</p>
+                </div>
+            </div>
+
+            <span class="admin-count">
+                {{ lecturers|length }} dosen
+            </span>
+        </div>
+
+        <div class="admin-table-wrap">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>DOSEN</th>
+                        <th>ID DOSEN</th>
+                        <th>PROGRAM STUDI UTAMA</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for d in lecturers %}
+                    <tr>
+                        <td>
+                            <div class="admin-person">
+                                <div class="admin-avatar admin-avatar-purple">
+                                    {{ (d.name or 'D')[0]|upper }}
+                                </div>
+                                <span class="admin-person-name">
+                                    {{ d.name }}
+                                </span>
+                            </div>
+                        </td>
+
+                        <td>
+                            <span class="admin-mono">{{ d.nim }}</span>
+                        </td>
+
+                        <td>
+                            <span class="admin-prodi">{{ d.prodi }}</span>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="3">
+                            <div class="admin-empty">
+                                <span class="admin-empty-icon">♙</span>
+                                <strong>Belum ada dosen</strong>
+                                <p>Data dosen akan tampil setelah akun terdaftar.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="admin-panel-footer">
+            Menampilkan data dosen yang tersedia di sistem.
+        </div>
+    </section>
+
+    <!-- ALL ASSIGNMENTS -->
+    <section class="admin-panel">
+        <div class="admin-panel-header">
+            <div class="admin-panel-heading">
+                <div class="admin-panel-symbol admin-icon-orange">▤</div>
+                <div>
+                    <h2>Semua Tugas</h2>
+                    <p>Ringkasan tugas akademik dari seluruh dosen.</p>
+                </div>
+            </div>
+
+            <span class="admin-count">
+                {{ tasks|length }} tugas
+            </span>
+        </div>
+
+        <div class="admin-table-wrap">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>NAMA TUGAS</th>
+                        <th>DOSEN</th>
+                        <th>PROGRAM STUDI</th>
+                        <th>MATA KULIAH</th>
+                        <th>DEADLINE</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for t in tasks %}
+                    <tr>
+                        <td>
+                            <span class="admin-task-title">{{ t.title }}</span>
+                        </td>
+                        <td>{{ t.lecturer_name }}</td>
+                        <td>{{ t.prodi }}</td>
+                        <td>{{ t.course }}</td>
+                        <td>
+                            <span class="admin-deadline">
+                                ◷ {{ t.deadline }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5">
+                            <div class="admin-empty">
+                                <span class="admin-empty-icon">▤</span>
+                                <strong>Belum ada tugas</strong>
+                                <p>Tugas yang dibuat dosen akan muncul di sini.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="admin-panel-footer">
+            Data tugas yang tercatat dalam sistem.
+        </div>
+    </section>
+
+    <!-- SYSTEM ACTIVITY -->
+    <section class="admin-panel admin-activity-panel">
+        <div class="admin-panel-header">
+            <div class="admin-panel-heading">
+                <div class="admin-panel-symbol admin-icon-green">◷</div>
+                <div>
+                    <h2>Aktivitas Sistem</h2>
+                    <p>Catatan aktivitas terbaru yang tercatat di EduTask.</p>
+                </div>
+            </div>
+
+            <span class="admin-count">
+                {{ logs|length }} aktivitas
+            </span>
+        </div>
+
+        <div class="admin-activity-list">
+            {% for l in logs %}
+            <article class="admin-activity-item">
+                <div class="admin-activity-marker">
+                    <span></span>
+                </div>
+
+                <div class="admin-activity-content">
+                    <div class="admin-activity-title">
+                        {{ l.name }} <span>·</span> {{ l.action }}
+                    </div>
+
+                    <p>{{ l.detail }}</p>
+
+                    <time class="admin-activity-time">
+                        {{ l.created_at[:16].replace('T', ' ') }}
+                    </time>
+                </div>
+            </article>
+            {% else %}
+            <div class="admin-empty">
+                <span class="admin-empty-icon">◷</span>
+                <strong>Belum ada aktivitas</strong>
+                <p>Aktivitas sistem akan ditampilkan jika tersedia.</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="admin-panel-footer">
+            Riwayat aktivitas berdasarkan catatan yang tersedia.
+        </div>
+    </section>
+
+    <footer class="admin-page-footer">
+        <span>EduTask Smart Deadline Reminder</span>
+        <span>Administrator Workspace</span>
+    </footer>
+
+</div>
+
+{% endblock %}

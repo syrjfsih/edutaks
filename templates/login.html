@@ -1,0 +1,42 @@
+{% extends "base.html" %}{% block title %}Masuk{% endblock %}{% block content %}
+<section class="auth-wrap">
+    <div class="auth-aside">
+        <div class="eyebrow">SELAMAT DATANG KEMBALI</div>
+        <h1>
+            Fokus belajar.
+            <br />
+            <span>Kami bantu ingatkan.</span>
+        </h1>
+        <p>Masuk untuk melihat tugas, deadline, dan agenda akademikmu.</p>
+        <div class="auth-bullets">
+            <span>✓ Pantau progres tugas</span><span>✓ Cek jadwal ujian</span><span>✓ Kelola prioritas harian</span>
+        </div>
+    </div>
+    <form class="auth-card" method="post">
+        <div class="auth-icon">↗</div>
+        <h2>Masuk ke EduTask</h2>
+        <p class="muted">Gunakan NIM atau ID dosen yang terdaftar.</p>
+        <label>
+            NIM / ID pengguna<input name="nim"
+       required
+       autocomplete="username"
+       placeholder="Masukkan NIM atau ID" /></label><label>Password<input type="password"
+       name="password"
+       required
+       autocomplete="current-password"
+       placeholder="Masukkan password" /></label><button class="btn btn-primary btn-full">
+            Masuk ke akun <span>→</span>
+            </button>
+            <p class="auth-switch">
+                Mahasiswa baru? <a href="{{ url_for('m_register') }}">Buat akun</a>
+            </p>
+            <p class="demo-hint">
+                <b>Akun demo dosen</b>
+                <br />
+                ID: dosen001 · Password: dosen123
+                <br />
+                <b>Admin</b>: admin · admin123
+            </p>
+        </form>
+    </section>
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends "base.html" %}{% block title %}Simulasi Pembayaran{% endblock %}{%
+block content %}
+<section class="form-page">
+    <div class="form-heading">
+        <span class="eyebrow">LANGKAH 2 DARI 2</span>
+        <h1>Aktivasi akun</h1>
+        <p>Selesaikan simulasi pembayaran untuk mengaktifkan akun EduTask.</p>
+    </div>
+    <div class="payment-layout">
+        <div class="form-card">
+            <div class="payment-brand">
+                <span class="brand-icon">E</span>
+                <div>
+                    <b>EduTask Student Plan</b><small>Aktivasi akun mahasiswa</small>
+                </div>
+            </div>
+            <div class="price-row">
+                <span>Biaya aktivasi (simulasi)</span><b>Rp25.000</b>
+            </div>
+            <div class="notice">
+                Ini hanya demo. Tidak terhubung ke bank, QRIS, atau penyedia pembayaran
+                sungguhan.
+            </div>
+            <form method="post">
+                <h3>Pilih metode simulasi</h3>
+                <label class="payment-option">
+                    <input type="radio" name="method" value="Virtual Account" checked /><span><b>Virtual Account</b><small>Nomor virtual account contoh</small></span><strong>▤</strong></label><label class="payment-option"><input type="radio" name="method" value="QRIS" /><span><b>QRIS</b><small>Kode QR simulasi</small></span><strong>▦</strong></label><label class="payment-option"><input type="radio" name="method" value="E-Wallet" /><span><b>E-Wallet</b><small>Dompet digital simulasi</small></span><strong>◉</strong>
+                    </label>
+                    <div class="fake-va">
+                        <small>KODE PEMBAYARAN SIMULASI</small><b>8801-{{ student['nim'] }}</b>
+                    </div>
+                    <button class="btn btn-primary btn-full">
+                        Simulasikan pembayaran berhasil <span>→</span>
+                    </button>
+                </form>
+            </div>
+            <aside class="payment-summary">
+                <h3>Ringkasan pendaftaran</h3>
+                <div class="summary-person">
+                    <span class="avatar">{{ student['name'][0]|upper }}</span>
+                    <div>
+                        <b>{{ student['name'] }}</b><small>{{ student['nim'] }}</small>
+                    </div>
+                </div>
+                <div class="summary-line">
+                    <span>Program studi</span><b>{{ student['prodi'] }}</b>
+                </div>
+                <div class="summary-line">
+                    <span>Status akun</span><span class="pill pill-yellow">Menunggu aktivasi</span>
+                </div>
+                <div class="summary-line"><span>Total simulasi</span><b>Rp25.000</b></div>
+            </aside>
+        </div>
+    </section>
+{% endblock %}

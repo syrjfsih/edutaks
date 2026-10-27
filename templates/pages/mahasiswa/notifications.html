@@ -1,0 +1,61 @@
+{% extends "base.html" %}{% block title %}Notifikasi{% endblock %}{% block
+content %}
+<div class="page-heading">
+    <div>
+        <span class="eyebrow">PUSAT PENGINGAT</span>
+        <h1>Notifikasi</h1>
+        <p>Informasi tugas baru, deadline, dan jadwal ujian.</p>
+    </div>
+</div>
+<section class="panel">
+    <div class="panel-heading">
+        <div>
+            <h2>Informasi terbaru</h2>
+            <p>Notifikasi tugas dan agenda akademikmu.</p>
+        </div>
+    </div>
+    {% for n in notifications %}
+        <div class="notification-row">
+            <span class="notification-icon">♧</span>
+            <div>
+                <b>{{ n.title }}</b>
+                <p>{{ n.message }}</p>
+                <small>{{ n.created_at[:16].replace('T', ' ') }}</small>
+            </div>
+        </div>
+    {% endfor %}{% for t in tasks if t.display_status!='Selesai' and
+    (t.days_left<=3) %}
+    <div class="notification-row">
+        <span class="notification-icon {% if t.days_left<0 %}notif-red{% else %}notif-orange{% endif %}">◷</span>
+        <div>
+            <b>{% if t.days_left<0 %}Deadline terlewat{% else %}Deadline mendekat{%
+            endif %}: {{ t.title }}</b>
+            <p>
+                {{ t.course }} · {% if t.days_left<0 %}Terlambat {{ -t.days_left }}
+                hari{% elif t.days_left==0 %}Deadline hari ini{% else %}Deadline {{
+                    t.days_left }} hari lagi{% endif %}. Progres saat ini {{ t.progress }}%.
+        </p>
+    </div>
+</div>
+{% endfor %}
+{% for e in exams %}
+    <div class="notification-row">
+        <span class="notification-icon notif-purple">▦</span>
+        <div>
+            <b>Jadwal ujian: {{ e.title }}</b>
+            <p>
+                {{ e.course }} · {{ e.exam_date }} · {{ e.location or 'Lokasi belum
+                    ditentukan' }}
+            </p>
+        </div>
+    </div>
+{% endfor %}{% if not notifications and not
+(tasks|selectattr("display_status","ne","Selesai")|list) and not exams %}
+<div class="empty-state">
+    <div>♧</div>
+    <b>Belum ada notifikasi</b>
+    <p>Kami akan menampilkan informasi baru di sini.</p>
+</div>
+{% endif %}
+</section>
+{% endblock %}

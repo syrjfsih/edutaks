@@ -1,0 +1,92 @@
+{% extends "base.html" %}{% block title %}Beranda{% endblock %}{% block content
+%}
+<section class="landing-hero">
+    <div class="hero-copy">
+        <div class="eyebrow">
+            <span class="pulse"></span> SMART DEADLINE REMINDER
+        </div>
+        <h1>
+            Tugas tertata.
+            <br />
+            <span>Masa depan terjaga.</span>
+        </h1>
+        <p>
+            Tempat mahasiswa merencanakan tugas, memantau progres, dan mengingat
+            deadline. Dosen bisa membagikan tugas serta jadwal ujian berdasarkan
+            program studi.
+        </p>
+        <div class="hero-actions">
+            <a class="btn btn-primary" href="{{ url_for('m_register') }}">Daftar sebagai mahasiswa <span>→</span></a><a class="btn btn-outline" href="{{ url_for('login') }}">Masuk akun</a>
+        </div>
+        <div class="hero-proof">
+            <span>✓</span> Pengelolaan tugas terpusat <span>✓</span> Pengingat
+            deadline
+        </div>
+    </div>
+    <div class="hero-art">
+        <div class="art-orbit orbit-one"></div>
+        <div class="art-orbit orbit-two"></div>
+        <div class="art-card">
+            <div class="art-card-top">
+                <span class="art-check">✓</span><span class="tiny-label">PROGRES MINGGU INI</span><b>78%</b>
+            </div>
+            <div class="progress-track">
+                <i style="width: 78%"></i>
+            </div>
+            <div class="art-task">
+                <span class="task-dot blue"></span>
+                <div>
+                    <b>Laporan proyek</b><small>Sistem Informasi Manajemen</small>
+                </div>
+                <span class="pill pill-yellow">Besok</span>
+            </div>
+            <div class="art-task">
+                <span class="task-dot green"></span>
+                <div><b>Resume materi</b><small>Basis Data</small></div>
+                <span class="pill pill-green">Selesai</span>
+            </div>
+            <div class="art-calendar">
+                <div><small>DEADLINE TERDEKAT</small><b>Rabu, 28 Okt</b></div>
+                <span>◷</span>
+            </div>
+        </div>
+        <div class="floating-note">
+            <span>✦</span>
+            <div>
+                <b>Selangkah lebih siap</b><small>Ingat tugas, bukan panik.</small>
+            </div>
+        </div>
+    </div>
+</section>
+<section class="feature-grid">
+    <div class="feature">
+        <span class="feature-icon lavender">▤</span>
+        <h3>Semua tugas di satu tempat</h3>
+        <p>Daftar tugas, mata kuliah, deadline, dan progres mudah dipantau.</p>
+    </div>
+    <div class="feature">
+        <span class="feature-icon peach">◷</span>
+        <h3>Deadline lebih terkendali</h3>
+        <p>Kenali tugas mendesak dan yang sudah melewati batas waktu.</p>
+    </div>
+    <div class="feature">
+        <span class="feature-icon mint">▦</span>
+        <h3>Kalender akademik</h3>
+        <p>Jadwal ujian dari dosen tampil untuk program studi yang sesuai.</p>
+    </div>
+</section>
+<section class="role-strip">
+    <div>
+        <span class="eyebrow">SATU PLATFORM, DUA PERAN</span>
+        <h2>Kolaborasi mahasiswa dan dosen.</h2>
+        <p>
+            Dosen hanya mengelola mata kuliah yang terdaftar. Tugas dan jadwal ujian
+            difilter berdasarkan program studi.
+        </p>
+    </div>
+    <div class="role-actions">
+        <a href="{{ url_for('d_register') }}"
+           class="btn btn-outline">Daftar sebagai dosen</a><a href="{{ url_for('login') }}" class="text-link">Sudah punya akun? Masuk →</a>
+    </div>
+</section>
+{% endblock %}

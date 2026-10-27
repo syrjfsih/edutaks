@@ -1,0 +1,66 @@
+{% extends "base.html" %}{% block title %}Kalender Akademik Dosen{% endblock
+    %}{% block content %}
+<div class="page-heading">
+    <div>
+        <span class="eyebrow">AGENDA UJIAN</span>
+        <h1>Kalender akademik</h1>
+        <p>
+            Tambahkan jadwal ujian yang akan terlihat oleh mahasiswa pada prodi
+            terkait.
+        </p>
+    </div>
+</div>
+<div class="content-grid">
+    <section class="panel">
+        <div class="panel-heading">
+            <div>
+                <h2>Jadwal ujian dibuat</h2>
+                <p>Daftar jadwal yang Anda kelola.</p>
+            </div>
+        </div>
+        {% for e in exams %}
+            <div class="event-row">
+                <div class="event-date">
+                    <b>{{ e.exam_date[-2:] }}</b><small>{{ e.exam_date[5:7] }}/{{ e.exam_date[:4] }}</small>
+                </div>
+                <div class="event-info">
+                    <b>{{ e.title }}</b><small>{{ e.course }} · {{ e.prodi }}</small><small>{{ e.location or 'Lokasi belum ditentukan' }}{% if e.notes %} · {{
+                        e.notes }}{% endif %}</small>
+                        </div>
+                        <span class="pill pill-purple">Ujian</span>
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <div>▦</div>
+                            <b>Belum ada jadwal ujian</b>
+                            <p>Jadwal yang dibuat akan muncul di sini.</p>
+                        </div>
+                    {% endfor %}
+                </section>
+                <section class="panel form-panel">
+                    <div class="panel-heading">
+                        <div>
+                            <h2>Tambah jadwal ujian</h2>
+                            <p>Mahasiswa akan menerima notifikasi.</p>
+                        </div>
+                    </div>
+                    <form method="post" class="stack-form">
+                        <label>
+                            Nama ujian<input name="title"
+       required
+       placeholder="Contoh: Ujian Tengah Semester" /></label><label>Program studi<select name="prodi" required>
+                            <option value="">Pilih prodi</option>
+                            {% for p in courses|map(attribute='prodi')|unique %}
+                                <option>{{ p }}</option>
+                            {% endfor %}
+                            </select></label><label>Mata kuliah<select name="course" required>
+                            {% for c in courses %}
+                                <option value="{{ c.course }}">{{ c.course }} — {{ c.prodi }}</option>
+                            {% endfor %}
+                            </select></label><label>Tanggal ujian<input type="date" name="exam_date" min="{{ today }}" required /></label><label>Ruang / lokasi<input name="location" placeholder="Contoh: Gedung A, Ruang 201" /></label><label>Catatan<textarea name="notes" rows="3" placeholder="Ketentuan atau informasi tambahan"></textarea></label><button class="btn btn-primary btn-full">
+                            Simpan jadwal <span>→</span>
+                            </button>
+                        </form>
+                    </section>
+                </div>
+            {% endblock %}

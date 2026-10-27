@@ -1,0 +1,68 @@
+{% extends "base.html" %}{% block title %}Riwayat Dosen{% endblock %}{% block
+content %}
+<div class="page-heading">
+    <div>
+        <span class="eyebrow">CATATAN AKTIVITAS</span>
+        <h1>Riwayat</h1>
+        <p>Jejak pengelolaan tugas dan progres mahasiswa.</p>
+    </div>
+</div>
+<section class="panel">
+    <div class="panel-heading">
+        <div>
+            <h2>Riwayat pengumpulan</h2>
+            <p>Catatan progres dari mahasiswa pada tugas Anda.</p>
+        </div>
+    </div>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Mahasiswa</th>
+                    <th>Tugas</th>
+                    <th>Mata kuliah</th>
+                    <th>Progres</th>
+                    <th>Waktu</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in submissions %}
+                    <tr>
+                        <td>
+                            <b>{{ s.name }}</b><small class="table-sub">{{ s.nim }}</small>
+                        </td>
+                        <td>{{ s.title }}</td>
+                        <td>{{ s.course }}</td>
+                        <td>{{ s.progress }}% · {{ s.status }}</td>
+                        <td>{{ s.updated_at[:16].replace('T', ' ') }}</td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="5" class="muted">Belum ada riwayat pengumpulan.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+<section class="panel">
+    <div class="panel-heading">
+        <div>
+            <h2>Aktivitas terbaru</h2>
+            <p>Aktivitas akun dosen dan mahasiswa dari prodi yang Anda ajar.</p>
+        </div>
+    </div>
+    {% for l in logs %}
+        <div class="timeline-row">
+            <span class="timeline-dot"></span>
+            <div>
+                <b>{{ l.name }} · {{ l.action }}</b>
+                <p>{{ l.detail }}</p>
+                <small>{{ l.created_at[:16].replace('T', ' ') }}</small>
+            </div>
+        </div>
+    {% else %}
+        <p class="muted">Belum ada aktivitas.</p>
+    {% endfor %}
+</section>
+{% endblock %}

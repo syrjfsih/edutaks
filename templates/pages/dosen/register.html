@@ -1,0 +1,45 @@
+{% extends "base.html" %}{% block title %}Registrasi Dosen{% endblock %}{% block
+content %}
+<section class="form-page">
+    <a class="back-link" href="{{ url_for('index') }}">← Kembali ke beranda</a>
+    <div class="form-heading">
+        <span class="eyebrow">AKUN PENGAJAR</span>
+        <h1>Daftar sebagai dosen</h1>
+        <p>
+            Pilih prodi dan mata kuliah yang Anda ampu. Data ini dipakai untuk
+            membatasi tugas ke mahasiswa yang sesuai.
+        </p>
+    </div>
+    <form method="post" class="form-card">
+        <div class="form-grid">
+            <label>
+                Nama lengkap<input name="name" required /></label><label>ID dosen / NIM<input name="nim" required minlength="5" maxlength="20" /></label><label>Password<input name="password" type="password" minlength="6" required /></label><label>Konfirmasi password<input name="confirm_password" type="password" minlength="6" required />
+                </label>
+            </div>
+            <div class="choice-section">
+                <h3>Program studi yang diajar</h3>
+                <p class="muted">Pilih satu atau lebih program studi.</p>
+                <div class="choice-grid">
+                    {% for p in PRODI %}<label class="choice"><input type="checkbox"
+       name="prodi"
+       value="{{ p }}" /><span>{{ p }}</span></label>{% endfor %}
+                </div>
+            </div>
+            <div class="choice-section">
+                <h3>Mata kuliah yang diampu</h3>
+                <p class="muted">Mata kuliah yang dipilih akan tersedia untuk pembuatan tugas.</p>
+                <div class="choice-grid">
+                    {% for c in COURSES %}<label class="choice"><input type="checkbox"
+       name="course"
+       value="{{ c }}" /><span>{{ c }}</span></label>{% endfor %}
+                </div>
+            </div>
+            <button class="btn btn-primary btn-full">
+                Buat akun dosen <span>→</span>
+            </button>
+            <p class="auth-switch">
+                Sudah terdaftar? <a href="{{ url_for('login') }}">Masuk</a>
+            </p>
+        </form>
+    </section>
+{% endblock %}

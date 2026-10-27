@@ -1,0 +1,46 @@
+{% extends "base.html" %}{% block title %}Registrasi Mahasiswa{% endblock %}{%
+block content %}
+<section class="form-page">
+    <a class="back-link" href="{{ url_for('index') }}">← Kembali ke beranda</a>
+    <div class="form-heading">
+        <span class="eyebrow">LANGKAH 1 DARI 2</span>
+        <h1>Buat akun mahasiswa</h1>
+        <p>Isi data akademikmu, lalu lanjutkan ke simulasi pembayaran.</p>
+    </div>
+    <form method="post" class="form-card">
+        <div class="form-grid">
+            <label>
+                Nama lengkap<input name="name"
+       required
+       placeholder="Nama sesuai data kampus" /></label><label>Program studi<select name="prodi" required>
+                {% for p in PRODI %}
+                    <option>{{ p }}</option>
+                {% endfor %}
+                </select></label><label>NIM<input name="nim"
+       inputmode="numeric"
+       pattern="[0-9]{5,20}"
+       required
+       placeholder="5–20 digit angka" /></label><label>Password<input name="password"
+       type="password"
+       minlength="6"
+       required
+       placeholder="Minimal 6 karakter" /></label><label class="span-two">Konfirmasi password<input name="confirm_password"
+       type="password"
+       minlength="6"
+       required
+       placeholder="Ulangi password" />
+                </label>
+            </div>
+            <div class="notice">
+                ⓘ Pembayaran pada prototipe ini hanya simulasi. Tidak ada uang yang
+                ditarik.
+            </div>
+            <button class="btn btn-primary btn-full">
+                Lanjut ke pembayaran <span>→</span>
+            </button>
+            <p class="auth-switch">
+                Sudah punya akun? <a href="{{ url_for('login') }}">Masuk</a>
+            </p>
+        </form>
+    </section>
+{% endblock %}
