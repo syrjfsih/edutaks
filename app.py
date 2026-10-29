@@ -8,14 +8,33 @@ from flask import (
     flash,
     abort,
 )
-import sqlite3, os
+import os
+import re
+import psycopg2
+
+from dotenv import load_dotenv
+from psycopg2.extras import RealDictCursor
+
+load_dotenv()
 from datetime import date, datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 
-BASE = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE, "edutask.db")
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+if not DATABASE_URL:
+    raise RuntimeError(
+        "DATABASE_URL belum diatur. "
+        "Tambahkan connection string Neon di file .env."
+    )
 app = Flask(__name__)
-app.secret_key = os.environ.get("EDUTASK_SECRET_KEY", "edutask-dev-secret-change-this")
+_secret_key = os.getenv("EDUTASK_SECRET_KEY")
+if not _secret_key:
+    if os.getenv("VERCEL") == "1":
+        raise RuntimeError(
+            "EDUTASK_SECRET_KEY belum diatur di Vercel Environment Variables."
+        )
+    _secret_key = "edutask-local-dev-only-change-before-deploy"
+app.secret_key = _secret_key
 PRODI = [
     "Teknik Pertambangan",
     "Teknik Perminyakan",
@@ -38,12 +57,132 @@ COURSES = [
 ]
 
 
-def db():
-    con = sqlite3.connect(DB_PATH)
-    con.row_factory = sqlite3.Row
-    con.execute("PRAGMA foreign_keys = ON")
-    return con
 
+class DBResult:
+    """Menyediakan hasil query yang kompatibel dengan pola SQLite lama."""
+
+    def __init__(self, cursor, lastrowid=None):
+        self.cursor = cursor
+        self.lastrowid = lastrowid
+
+    def fetchone(self):
+        return self.cursor.fetchone()
+
+    def fetchall(self):
+        return self.cursor.fetchall()
+
+    def __iter__(self):
+        return iter(self.cursor)
+
+    def __getattr__(self, name):
+        return getattr(self.cursor, name)
+
+
+class DBConnection:
+    """Adapter sementara agar pola query app.py lama tetap dapat dipakai."""
+
+    def __init__(self):
+        self.connection = psycopg2.connect(
+            DATABASE_URL,
+            cursor_factory=RealDictCursor,
+            connect_timeout=10,
+        )
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        try:
+            if exc_type is None:
+                self.connection.commit()
+            else:
+                self.connection.rollback()
+        finally:
+            self.connection.close()
+        return False
+
+    def execute(self, sql, params=()):
+        sql = sql.strip()
+        upper_sql = sql.upper()
+
+        if upper_sql.startswith("PRAGMA"):
+            raise RuntimeError(
+                "PRAGMA SQLite tidak didukung PostgreSQL. "
+                "Hapus perintah PRAGMA dari kode."
+            )
+
+        # Konversi INSERT OR IGNORE menjadi INSERT ... ON CONFLICT.
+        ignore_insert = bool(
+            re.match(r"INSERT\s+OR\s+IGNORE\s+INTO\b", sql, re.I)
+        )
+
+        if ignore_insert:
+            sql = re.sub(
+                r"INSERT\s+OR\s+IGNORE\s+INTO\b",
+                "INSERT INTO",
+                sql,
+                count=1,
+                flags=re.I,
+            )
+
+            if "ON CONFLICT" not in sql.upper():
+                sql = sql.rstrip().rstrip(";") + " ON CONFLICT DO NOTHING"
+
+        # Query lama memakai kutip ganda untuk literal SQLite, misalnya role="mahasiswa".
+        # PostgreSQL memerlukan kutip tunggal untuk literal string. Query ini tidak
+        # menggunakan quoted identifiers, jadi konversi ini sesuai untuk SQL aplikasi.
+        sql = re.sub(
+            r'"([^"]*)"',
+            lambda match: "'" + match.group(1).replace("'", "''") + "'",
+            sql,
+        )
+        # Konversi placeholder SQLite (?) ke placeholder psycopg2 (%s).
+        sql = sql.replace("?", "%s")
+
+        upper_sql = sql.upper()
+        is_insert = upper_sql.startswith("INSERT INTO")
+        auto_returning = (
+            is_insert
+            and "RETURNING" not in upper_sql
+            and "ON CONFLICT" not in upper_sql
+        )
+
+        if auto_returning:
+            sql = sql.rstrip().rstrip(";") + " RETURNING id"
+
+        cursor = self.connection.cursor()
+        cursor.execute(sql, params)
+
+        lastrowid = None
+
+        if auto_returning:
+            row = cursor.fetchone()
+            if row is not None:
+                lastrowid = row["id"]
+
+        return DBResult(cursor, lastrowid)
+
+    def executescript(self, script):
+        # Ubah tipe kolom khusus SQLite ke tipe PostgreSQL.
+        script = re.sub(
+            r"\bINTEGER\s+PRIMARY\s+KEY\s+AUTOINCREMENT\b",
+            "BIGSERIAL PRIMARY KEY",
+            script,
+            flags=re.I,
+        )
+        script = re.sub(r"\bINTEGER\b", "BIGINT", script, flags=re.I)
+
+        for statement in script.split(";"):
+            statement = statement.strip()
+            if statement:
+                self.execute(statement)
+
+    def close(self):
+        self.connection.close()
+
+
+def db():
+    return DBConnection()
 
 def init_db():
     with db() as c:
@@ -82,39 +221,42 @@ def init_db():
           action TEXT NOT NULL, detail TEXT NOT NULL, created_at TEXT NOT NULL
         );
         """)
-        # Demo lecturer for first run
-        row = c.execute("SELECT id FROM users WHERE nim=?", ("dosen001",)).fetchone()
-        if not row:
-            cur = c.execute(
-                "INSERT INTO users(name,prodi,nim,password_hash,role,payment_status,created_at) VALUES(?,?,?,?,?,?,?)",
-                (
-                    "Dosen Demo",
-                    PRODI[0],
-                    "dosen001",
-                    generate_password_hash("dosen123"),
-                    "dosen",
-                    "aktif",
-                    datetime.now().isoformat(timespec="seconds"),
-                ),
-            )
-            lid = cur.lastrowid
-            c.execute(
-                "INSERT INTO lecturer_courses(lecturer_id,prodi,course) VALUES(?,?,?)",
-                (lid, PRODI[0], COURSES[0]),
-            )
-        if not c.execute("SELECT id FROM users WHERE nim=?", ("admin",)).fetchone():
-            c.execute(
-                "INSERT INTO users(name,prodi,nim,password_hash,role,payment_status,created_at) VALUES(?,?,?,?,?,?,?)",
-                (
-                    "Administrator",
-                    PRODI[0],
-                    "admin",
-                    generate_password_hash("admin123"),
-                    "admin",
-                    "aktif",
-                    datetime.now().isoformat(timespec="seconds"),
-                ),
-            )
+        # Akun demo hanya dibuat jika diaktifkan secara eksplisit.
+        # Jangan aktifkan SEED_DEMO_USERS di deployment publik karena password demo diketahui.
+        if os.getenv("SEED_DEMO_USERS", "false").lower() == "true":
+            # Demo lecturer for first run
+            row = c.execute("SELECT id FROM users WHERE nim=?", ("dosen001",)).fetchone()
+            if not row:
+                cur = c.execute(
+                    "INSERT INTO users(name,prodi,nim,password_hash,role,payment_status,created_at) VALUES(?,?,?,?,?,?,?)",
+                    (
+                        "Dosen Demo",
+                        PRODI[0],
+                        "dosen001",
+                        generate_password_hash("dosen123"),
+                        "dosen",
+                        "aktif",
+                        datetime.now().isoformat(timespec="seconds"),
+                    ),
+                )
+                lid = cur.lastrowid
+                c.execute(
+                    "INSERT INTO lecturer_courses(lecturer_id,prodi,course) VALUES(?,?,?)",
+                    (lid, PRODI[0], COURSES[0]),
+                )
+            if not c.execute("SELECT id FROM users WHERE nim=?", ("admin",)).fetchone():
+                c.execute(
+                    "INSERT INTO users(name,prodi,nim,password_hash,role,payment_status,created_at) VALUES(?,?,?,?,?,?,?)",
+                    (
+                        "Administrator",
+                        PRODI[0],
+                        "admin",
+                        generate_password_hash("admin123"),
+                        "admin",
+                        "aktif",
+                        datetime.now().isoformat(timespec="seconds"),
+                    ),
+                )
 
 
 def current_user():
@@ -244,7 +386,7 @@ def m_register():
                     uid = cur.lastrowid
                 session["pending_payment"] = uid
                 return redirect(url_for("payment"))
-            except sqlite3.IntegrityError:
+            except psycopg2.IntegrityError:
                 flash("NIM sudah terdaftar. Silakan masuk.", "error")
     return render_template("pages/mahasiswa/register.html")
 
@@ -296,7 +438,7 @@ def d_register():
                 log_action(uid, "Registrasi dosen", "Akun dosen dibuat")
                 flash("Akun dosen berhasil dibuat.", "success")
                 return redirect(url_for("d_dashboard"))
-            except sqlite3.IntegrityError:
+            except psycopg2.IntegrityError:
                 flash("NIM/ID dosen sudah terdaftar.", "error")
     return render_template("pages/dosen/register.html")
 
@@ -343,7 +485,7 @@ def login():
         else:
             session.clear()
             session["user_id"] = u["id"]
-            #log_action(u["id"], "Masuk", "Login berhasil")
+            log_action(u["id"], "Masuk", "Login berhasil")
             return redirect(
                 url_for(
                     {
