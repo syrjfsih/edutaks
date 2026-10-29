@@ -343,7 +343,7 @@ def login():
         else:
             session.clear()
             session["user_id"] = u["id"]
-            log_action(u["id"], "Masuk", "Login berhasil")
+            #log_action(u["id"], "Masuk", "Login berhasil")
             return redirect(
                 url_for(
                     {
