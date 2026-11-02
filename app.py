@@ -64,18 +64,23 @@ class DBResult:
     def __init__(self, cursor, lastrowid=None):
         self.cursor = cursor
         self.lastrowid = lastrowid
+        """Menyimpan cursor database dan ID baris terakhir yang dibuat, jika tersedia."""
 
     def fetchone(self):
         return self.cursor.fetchone()
+        """Mengambil satu baris hasil query database."""
 
     def fetchall(self):
         return self.cursor.fetchall()
+        """Mengambil seluruh baris hasil query database."""
 
     def __iter__(self):
         return iter(self.cursor)
+        """Membuat hasil query dapat ditelusuri satu per satu."""
 
     def __getattr__(self, name):
         return getattr(self.cursor, name)
+        """Meneruskan atribut yang tidak tersedia ke cursor PostgreSQL asli."""
 
 
 class DBConnection:
@@ -87,9 +92,11 @@ class DBConnection:
             cursor_factory=RealDictCursor,
             connect_timeout=10,
         )
+        """Menyimpan cursor database dan ID baris terakhir yang dibuat, jika tersedia."""
 
     def __enter__(self):
         return self
+        """Mengaktifkan koneksi saat objek digunakan dalam blok with."""
 
     def __exit__(self, exc_type, exc_value, traceback):
         try:
@@ -100,6 +107,7 @@ class DBConnection:
         finally:
             self.connection.close()
         return False
+        """Commit jika berhasil, rollback jika terjadi error, lalu menutup koneksi."""
 
     def execute(self, sql, params=()):
         sql = sql.strip()
@@ -161,6 +169,7 @@ class DBConnection:
                 lastrowid = row["id"]
 
         return DBResult(cursor, lastrowid)
+        """Menjalankan SQL setelah menyesuaikan sintaks lama agar kompatibel dengan PostgreSQL."""
 
     def executescript(self, script):
         # Ubah tipe kolom khusus SQLite ke tipe PostgreSQL.
@@ -176,13 +185,16 @@ class DBConnection:
             statement = statement.strip()
             if statement:
                 self.execute(statement)
+        """Menjalankan beberapa perintah SQL untuk menyiapkan struktur database."""
 
     def close(self):
         self.connection.close()
+        """Menutup koneksi database secara manual."""
 
 
 def db():
     return DBConnection()
+    """Membuat dan mengembalikan koneksi database PostgreSQL."""
 
 def init_db():
     with db() as c:
@@ -257,6 +269,7 @@ def init_db():
                         datetime.now().isoformat(timespec="seconds"),
                     ),
                 )
+    """Membuat tabel-tabel EduTask jika belum tersedia dan menyiapkan akun demo jika diaktifkan."""
 
 
 def current_user():
@@ -265,6 +278,7 @@ def current_user():
         return None
     with db() as c:
         return c.execute("SELECT * FROM users WHERE id=?", (uid,)).fetchone()
+    """Mengambil pengguna yang sedang login dari session, atau None jika belum login."""
 
 
 def login_required(role=None):
@@ -275,6 +289,7 @@ def login_required(role=None):
     if role and u["role"] != role:
         abort(403)
     return None
+    """Memeriksa status login dan memastikan role pengguna sesuai dengan akses halaman."""
 
 
 def log_action(user_id, action, detail=""):
@@ -283,6 +298,7 @@ def log_action(user_id, action, detail=""):
             "INSERT INTO activity_logs(user_id,action,detail,created_at) VALUES(?,?,?,?)",
             (user_id, action, detail, datetime.now().isoformat(timespec="seconds")),
         )
+    """Mencatat aktivitas pengguna ke tabel activity_logs."""
 
 
 def notify(user_id, title, message):
@@ -291,6 +307,7 @@ def notify(user_id, title, message):
             "INSERT INTO notifications(user_id,title,message,created_at) VALUES(?,?,?,?)",
             (user_id, title, message, datetime.now().isoformat(timespec="seconds")),
         )
+    """Menyimpan notifikasi untuk pengguna ke tabel notifications."""
 
 
 def student_tasks(student):
@@ -320,6 +337,7 @@ def student_tasks(student):
             x["display_status"] = "Belum dikerjakan"
         result.append(x)
     return result
+    """Mengambil tugas mahasiswa dan menghitung progres, sisa hari, serta status tugas."""
 
 
 @app.context_processor
@@ -331,6 +349,7 @@ def common_context():
         "PRODI": PRODI,
         "COURSES": COURSES,
     }
+    """Menyediakan data umum yang dapat digunakan oleh seluruh template."""
 
 
 @app.route("/")
@@ -347,6 +366,7 @@ def index():
             )
         )
     return render_template("landing.html")
+    """Menampilkan landing page atau mengarahkan pengguna login ke dashboard sesuai role."""
 
 
 @app.route("/register/mahasiswa", methods=["GET", "POST"])
@@ -389,6 +409,7 @@ def m_register():
             except psycopg2.IntegrityError:
                 flash("NIM sudah terdaftar. Silakan masuk.", "error")
     return render_template("pages/mahasiswa/register.html")
+    """Memvalidasi dan menyimpan registrasi mahasiswa, lalu mengarahkan ke simulasi pembayaran."""
 
 
 @app.route("/register/dosen", methods=["GET", "POST"])
@@ -441,6 +462,7 @@ def d_register():
             except psycopg2.IntegrityError:
                 flash("NIM/ID dosen sudah terdaftar.", "error")
     return render_template("pages/dosen/register.html")
+    """Memproses registrasi dosen dan menyimpan relasi program studi serta mata kuliah yang diajar."""
 
 
 @app.route("/payment", methods=["GET", "POST"])
@@ -468,6 +490,7 @@ def payment():
             flash("Pembayaran simulasi berhasil. Akun mahasiswa aktif.", "success")
             return redirect(url_for("m_dashboard"))
     return render_template("pages/mahasiswa/payment.html", student=student)
+    """Memproses simulasi pembayaran dan mengaktifkan akun mahasiswa setelah metode dipilih."""
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -496,6 +519,7 @@ def login():
                 )
             )
     return render_template("login.html")
+    """Memvalidasi kredensial, memeriksa status pembayaran, membuat session, dan mengarahkan sesuai role."""
 
 
 @app.route("/logout")
@@ -506,6 +530,7 @@ def logout():
     session.clear()
     flash("Anda berhasil keluar.", "success")
     return redirect(url_for("index"))
+    """Mencatat aktivitas logout, menghapus session, dan kembali ke halaman utama."""
 
 
 @app.route("/mahasiswa")
@@ -525,6 +550,7 @@ def m_dashboard():
         "done": sum(t["display_status"] == "Selesai" for t in tasks),
     }
     return render_template("pages/mahasiswa/dashboard.html", tasks=tasks, stats=stats)
+    """Menyiapkan statistik tugas mahasiswa untuk ditampilkan pada dashboard."""
 
 
 @app.route("/mahasiswa/tugas")
@@ -535,6 +561,7 @@ def m_tasks():
     return render_template(
         "pages/mahasiswa/tugas.html", tasks=student_tasks(current_user())
     )
+    """Menampilkan daftar tugas yang relevan dengan program studi mahasiswa."""
 
 
 @app.route("/mahasiswa/tugas/<int:task_id>/progres", methods=["POST"])
@@ -581,6 +608,7 @@ def m_progress(task_id):
     log_action(u["id"], "Perbarui progres", task["title"] + " — " + str(progress) + "%")
     flash("Progres tugas diperbarui.", "success")
     return redirect(url_for("m_tasks"))
+    """Memvalidasi dan menyimpan progres tugas serta memberi notifikasi kepada dosen."""
 
 
 @app.route("/mahasiswa/kalender")
@@ -597,6 +625,7 @@ def m_calendar():
     return render_template(
         "pages/mahasiswa/calendar.html", exams=exams, tasks=student_tasks(u)
     )
+    """Mengambil jadwal ujian dan tugas untuk kalender akademik mahasiswa."""
 
 
 @app.route("/mahasiswa/notifikasi")
@@ -621,6 +650,7 @@ def m_notifications():
         tasks=tasks,
         exams=exams,
     )
+    """Mengambil notifikasi, tugas, dan jadwal ujian yang relevan untuk mahasiswa."""
 
 
 @app.route("/mahasiswa/riwayat")
@@ -639,6 +669,7 @@ def m_history():
             (u["id"],),
         ).fetchall()
     return render_template("pages/mahasiswa/history.html", logs=logs, submissions=subs)
+    """Mengambil riwayat aktivitas dan pengumpulan tugas milik mahasiswa."""
 
 
 @app.route("/dosen")
@@ -687,6 +718,7 @@ def d_dashboard():
         student_rows=student_rows,
         courses=courses,
     )
+    """Menyiapkan statistik dosen, mata kuliah, tugas, mahasiswa, dan progres pengumpulan."""
 
 
 @app.route("/dosen/tugas", methods=["GET", "POST"])
@@ -777,6 +809,7 @@ def d_tasks():
     return render_template(
         "pages/dosen/tugas.html", courses=courses, tasks=tasks, submissions=subs
     )
+    """Menampilkan dan memproses pembuatan, pengubahan, serta penghapusan tugas dosen."""
 
 
 @app.route("/dosen/kalender", methods=["GET", "POST"])
@@ -846,6 +879,7 @@ def d_calendar():
             "SELECT * FROM exams WHERE lecturer_id=? ORDER BY exam_date", (u["id"],)
         ).fetchall()
     return render_template("pages/dosen/calendar.html", courses=courses, exams=exams)
+    """Menyimpan jadwal ujian dan mengirim notifikasi kepada mahasiswa terkait."""
 
 
 @app.route("/dosen/notifikasi")
@@ -866,6 +900,7 @@ def d_notifications():
     return render_template(
         "pages/dosen/notifications.html", notifications=notifications, submissions=subs
     )
+    """Menampilkan notifikasi dosen dan informasi pengumpulan tugas mahasiswa."""
 
 
 @app.route("/dosen/riwayat")
@@ -884,6 +919,7 @@ def d_history():
             (u["id"],),
         ).fetchall()
     return render_template("pages/dosen/history.html", logs=logs, submissions=subs)
+    """Mengambil riwayat aktivitas dan pengumpulan tugas yang terkait dengan dosen."""
 
 
 @app.route("/admin")
@@ -907,6 +943,7 @@ def admin_dashboard():
     return render_template(
         "admin.html", students=students, lecturers=lecturers, tasks=tasks, logs=logs
     )
+    """Mengambil data mahasiswa, dosen, tugas, dan log aktivitas untuk dashboard admin."""
 
 
 @app.errorhandler(403)
@@ -917,6 +954,7 @@ def forbidden(e):
         ),
         403,
     )
+    """Menampilkan halaman 403 ketika pengguna tidak memiliki hak akses."""
 
 
 @app.errorhandler(404)
@@ -927,6 +965,7 @@ def not_found(e):
         ),
         404,
     )
+    """Menampilkan halaman 404 ketika halaman atau data tidak ditemukan."""
 
 
 init_db()
